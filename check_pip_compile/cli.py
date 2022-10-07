@@ -45,6 +45,18 @@ def check_directory(path: str) -> bool:
     return succeeded
 
 
+def get_compile_command(in_file: str, txt_file: str) -> str:
+    """Get the command that would compile txt_file from in_file."""
+    with open(txt_file) as fl:
+        for line in fl:
+            if line == "# To update, run:\n":
+                break
+        for line in fl:
+            if command := line.strip("# \n"):
+                return command
+    return f"pip-compile {in_file}"
+
+
 def check_file(in_file: Optional[str], txt_file: Optional[str]) -> bool:
     """Return True, if it's ok."""
     succeeded = True
@@ -57,8 +69,9 @@ def check_file(in_file: Optional[str], txt_file: Optional[str]) -> bool:
         in_age = datetime.datetime.fromtimestamp(os.path.getmtime(in_file))
         txt_age = datetime.datetime.fromtimestamp(os.path.getmtime(txt_file))
         if in_age > txt_age:
+            compile_command = get_compile_command(in_file, txt_file)
             print(
-                f"Run 'pip-compile {in_file}' ({in_age}), as {txt_file} "
+                f"Run '{compile_command}' ({in_age}), as {txt_file} "
                 f"({txt_age}) might be outdated"
             )
             succeeded = False
